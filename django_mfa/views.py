@@ -23,9 +23,12 @@ def security_settings(request):
 
 @login_required
 def configure_mfa(request):
+    redirect_url = None
     qr_code = None
     base_32_secret_utf8 = None
     if request.method == "POST":
+        redirect_url = request.POST.get('next', settings.LOGIN_REDIRECT_URL)
+
         base_32_secret = base64.b32encode(
             codecs.decode(codecs.encode(
             '{0:020x}'.format(random.getrandbits(80))
@@ -40,11 +43,12 @@ def configure_mfa(request):
             issuer_name = None
         qr_code = re.sub(r'=+$', '', totp_obj.provisioning_uri(request.user.username, issuer_name=issuer_name))
 
-    return render(request, 'django_mfa/configure.html', {"qr_code": qr_code, "secret_key": base_32_secret_utf8})
+    return render(request, 'django_mfa/configure.html', {"qr_code": qr_code, "secret_key": base_32_secret_utf8, "next": redirect_url})
 
 
 @login_required
 def enable_mfa(request):
+    redirect_url = None
     qr_code = None
     base_32_secret = None
     is_verified = False
@@ -52,19 +56,29 @@ def enable_mfa(request):
         base_32_secret = request.POST['secret_key']
         totp_obj = totp.TOTP(request.POST['secret_key'])
         is_verified = totp_obj.verify(request.POST["verification_code"])
+        redirect_url = request.POST.get('next', settings.LOGIN_REDIRECT_URL)
+
         if is_verified:
             request.session['verfied_otp'] = True
             UserOTP.objects.get_or_create(otp_type=request.POST["otp_type"],
                                           user=request.user,
                                           secret_key=request.POST['secret_key'])
             messages.success(request, "You have successfully enabled multi-factor authentication on your account.")
-            response = redirect(settings.LOGIN_REDIRECT_URL)
+
+            response = redirect(redirect_url)
             return response
         else:
             totp_obj = totp.TOTP(base_32_secret)
             qr_code = totp_obj.provisioning_uri(request.user.email)
+    else:
+        redirect_url = request.GET.get('next', settings.LOGIN_REDIRECT_URL)
 
-    return render(request, 'django_mfa/configure.html', {"is_verified": is_verified, "qr_code": qr_code, "secret_key": base_32_secret})
+    return render(request, 'django_mfa/configure.html', {
+        "is_verified": is_verified,
+        "qr_code": qr_code,
+        "secret_key": base_32_secret,
+        "next": redirect_url
+     })
 
 
 def _generate_cookie_salt(user):
