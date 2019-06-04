@@ -14,7 +14,7 @@ except ImportError:  # Django < 1.10
 class MfaMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
-        if request.user.is_authenticated and not verify_rmb_cookie(request) and is_mfa_enabled(request.user):
+        if request.user.is_authenticated and is_mfa_enabled(request.user) and not verify_rmb_cookie(request) :
             if not request.session.get('verfied_otp'):
                 current_path = request.path
                 if current_path != reverse("mfa:verify_otp"):
