@@ -8,6 +8,7 @@
 <form method="post" action=".">
 {% csrf_token %}
 <input type="hidden" name="otp_type" value="hotp">
+<input type="hidden" class="form-control" name="next" value="{{ next }}">
 <button type="submit">SetUp with App</button>
 </form>
 <button>SetUp with Email</button>
