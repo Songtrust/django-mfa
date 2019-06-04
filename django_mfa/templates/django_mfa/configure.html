@@ -43,6 +43,7 @@
             <input class="form-control" id="two-factor-code" type="text" name="verification_code" value="" placeholder="Enter six digit number." autocomplete="off">
             <input type="hidden" name="secret_key" value="{{secret_key}}">
             <input type="hidden" name="otp_type" value="TOTP">
+            <input type="hidden" class="form-control" name="next" value="{{ next }}">
           </dd>
         </dl>
         <button type="submit" class="btn btn-primary">
@@ -70,6 +71,8 @@
 			<p>Use an application on your phone to get two-factor authentication codes when prompted.</p>
       <form action="." method="post">{% csrf_token %}
         <input type="hidden" name="otp_type" value="hotp">
+        <input type="hidden" name="otp_type" value="hotp">
+        <input type="hidden" class="form-control" name="next" value="{{ next }}">
         <button type="submit" class="btn btn-primary">Set up using an app</button>
 		</form>
 		</div>
